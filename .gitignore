@@ -1,0 +1,15 @@
+# Visual Studio
+.vs/
+**/.vs/
+
+# Build folders
+bin/
+obj/
+
+# User settings
+*.user
+*.suo
+
+# Temporary files
+*.cache
+*.log

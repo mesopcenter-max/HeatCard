@@ -1,0 +1,463 @@
+@model HeatCardGenerator.Models.HeatCardViewModel
+@{
+    ViewData["Title"] = "Heat Treatment Card Generator";
+}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>@ViewData["Title"]</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<div class="container-fluid px-4 py-4">
+  @if (TempData["ImportMessage"] != null)
+  {
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      @TempData["ImportMessage"]
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  }
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1>Heat Treatment Card</h1><p class="text-muted mb-0">Generate the Excel heat card report, or download a selected loading-plan template as Word.</p></div>
+    <div class="d-flex gap-2 align-items-center"><span class="badge text-bg-primary">Excel Generator</span></div>
+  </div>
+
+  <form asp-action="Generate" method="post" id="heatCardForm">
+    @Html.AntiForgeryToken()
+
+    <div class="card mb-4">
+      <div class="card-header">1. Heat Card Details</div>
+      <div class="card-body"><div class="row g-3">
+        @foreach (var f in new[]{("Project","Project"),("FdNo","FD No"),("PslNo","PSL No"),("PartName","Part Name"),("CustPartName","Customer Part Name"),("Specification","Specification"),("BatchNo","Batch No"),("WorkOrderNo","Work Order No"),("HeatNo","Heat No"),("SerialNo","Serial No"),("Quantity","Quantity")}) {
+          <div class="col-md-4"><label class="form-label">@f.Item2</label><input class="form-control" name="@f.Item1" /></div>
+        }
+      </div></div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">2. Pre Heat Treatment Checklist</div>
+      <div class="card-body p-0"><div class="table-responsive"><table class="table table-bordered mb-0 align-middle">
+        <thead><tr><th style="width:55px">Sl.</th><th>Checklist item</th><th style="width:170px">Result</th></tr></thead>
+        <tbody>
+        @{ var items = new[]{"Surface condition / pre-cleaning / etching / short blasting","Degreasing before ageing of aluminum alloys","Calibration Status - Furnace","Calibration Status - Instrument","Calibration Status - Recorder","Leakage of Ar gas","Test bars","Half cut parts","Berkatekt coating","Load parts as per loading plan","Other / additional check"}; }
+        @for(int i=0;i<items.Length;i++){
+          <tr>
+            <td>@(i+1)</td>
+            <td>@items[i]</td>
+            <td>
+              <div class="d-flex gap-3 align-items-center">
+                <label class="form-check-label mb-0">
+                  <input class="form-check-input me-1" type="radio" name="Checklist[@i]" value="Satisfactory" /> Satisfactory
+                </label>
+                <label class="form-check-label mb-0">
+                  <input class="form-check-input me-1" type="radio" name="Checklist[@i]" value="Not Satisfactory" /> Not Satisfactory
+                </label>
+              </div>
+            </td>
+          </tr>
+        }
+        </tbody>
+      </table></div></div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>3. Heat Treatment Process - Actual</span>
+        <span class="small text-muted">Choose a loading plan for any operation row. Download one template at a time.</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle process-table mb-0">
+            <thead><tr>
+              <th>Opr No</th><th>Date</th><th>Process</th><th>Furnace</th><th>Qty</th><th>Temp</th><th>In</th><th>Out</th><th>Hold Time</th><th>Cooling</th><th>Sign</th><th class="loading-plan-col">Loading Plan</th>
+            </tr></thead>
+            <tbody>
+            @for(int i=0;i<9;i++){
+              <tr>
+                <td><input class="form-control" name="Processes[@i].OprNo" /></td>
+                <td><input type="date" class="form-control" name="Processes[@i].Date" /></td>
+                <td>
+                  <select class="form-select" name="Processes[@i].Process">
+                    <option value="">Select process</option>
+                    <option value="Hardenining">Hardenining</option>
+                    <option value="Tempering">Tempering</option>
+                    <option value="S/R">S/R</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="form-select" name="Processes[@i].FurnaceNo">
+                    <option value="">Select furnace</option>
+                    @foreach (var furnaceNo in Model.FurnaceNumbers)
+                    {
+                      <option value="@furnaceNo">@furnaceNo</option>
+                    }
+                  </select>
+                </td>
+                <td><input class="form-control" name="Processes[@i].Qty" /></td>
+                <td>
+                  <div class="input-group">
+                    <input class="form-control process-temperature" name="Processes[@i].Temp" />
+                    <button type="button" class="btn btn-outline-secondary temperature-search-button" title="Search temperature history" aria-label="Search temperature history for this process row">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M11.742 10.344a6.5 6.5 0 1 1 1.398-1.398l3.855 3.854a1 1 0 0 1-1.415 1.415l-3.855-3.854zm-7.72-7.72a5.5 5.5 0 1 0 7.778 7.778 5.5 5.5 0 0 0-7.778-7.778z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+                <td><input type="time" class="form-control" name="Processes[@i].InTime" /></td>
+                <td><input type="time" class="form-control" name="Processes[@i].OutTime" /></td>
+                <td><input class="form-control" name="Processes[@i].HoldTime" /></td>
+                <td>
+                  <select class="form-select" name="Processes[@i].CoolingMethod">
+                    <option value="">Select cooling</option>
+                    <option value="A/C">A/C</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </td>
+                <td><input class="form-control" name="Processes[@i].OperatorSign" /></td>
+                <td class="loading-plan-cell">
+                  <input type="hidden" class="loading-plan-value" name="Processes[@i].LoadingPlanId" value="" />
+                  <button type="button" class="btn btn-outline-primary loading-plan-button" data-row="@i" title="Select loading plan" data-bs-toggle="modal" data-bs-target="#loadingPlanModal">
+                    <span class="image-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    </span>
+                  </button>
+                  <button type="button" class="selected-plan-preview d-none" data-bs-toggle="modal" data-bs-target="#loadingPlanPreviewModal" aria-label="Preview selected loading plan">
+                    <img alt="Selected loading plan preview" />
+                  </button>
+                  <div class="selected-plan-name"></div>
+                </td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+        <div class="p-3 small text-muted">The selected loading plan is saved with its operation row. Click its thumbnail to view a larger preview.</div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">4. Water/Oil Temperature & Signatures</div>
+      <div class="card-body"><div class="row g-3">
+        <div class="col-md-3"><label class="form-label">Water/Oil Temp - Before</label><input class="form-control" name="WaterOilBefore" /></div>
+        <div class="col-md-3"><label class="form-label">Water/Oil Temp - After</label><input class="form-control" name="WaterOilAfter" /></div>
+        <div class="col-md-3"><label class="form-label">Inspector Signature</label><input class="form-control" name="InspectorSignature" /></div>
+        <div class="col-md-3"><label class="form-label">Shop Supervisor Signature</label><input class="form-control" name="SupervisorSignature" /></div>
+      </div></div>
+    </div>
+
+    <div class="d-flex gap-2 mb-5">
+      <button class="btn btn-primary btn-lg" type="submit">Generate Excel Report</button>
+      <button class="btn btn-outline-primary btn-lg" type="submit" formaction="@Url.Action("DownloadLoadingPlans")">Download Selected Plan as Word</button>
+      <button class="btn btn-outline-secondary btn-lg" type="reset">Clear Form</button>
+    </div>
+  </form>
+
+  <details class="card mb-4">
+    <summary class="card-header">
+      Import Eurotherm historical readings (CSV)
+    </summary>
+    <div class="card-body">
+      <div class="mb-3">
+        <div class="form-text text-muted">
+          Expected columns: <code>Timestamp,FurnaceNo,Channel,Temperature,ControllerId</code>
+        </div>
+      </div>
+      <form action="/temperature-history/import-csv" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+          <label class="form-label" for="csvFileInput">Import CSV File</label>
+          <input class="form-control" id="csvFileInput" type="file" name="file" accept=".csv" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Import CSV</button>
+      </form>
+      <div class="mt-3 small text-muted">
+        <div class="fw-bold">Multi-channel demo search:</div>
+        searching DEMO-GH-3 on 2026-10-28 loads eight synthetic channel choices in memory; no CSV import is needed. The downloadable CSV is optional and is only for testing CSV import in an isolated test database.
+        <div>
+          <a href="/demo-temperature-readings.csv" class="btn btn-link p-0" download>Download multi-channel demo CSV</a> (DEMO-GH-3 / 2026-10-28 readings for an 850°C search)
+        </div>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- Loading Plan Picker -->
+<div class="modal fade" id="loadingPlanModal" tabindex="-1" aria-labelledby="loadingPlanModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="loadingPlanModalLabel">Select Loading Plan</h5>
+          <div class="small text-muted">Choose the jig/ring/stack combination for this process row.</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          @foreach (var plan in Model.LoadingPlans)
+          {
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+              <button type="button" class="loading-plan-card w-100" data-plan-id="@plan.Id" data-plan-name="@plan.Name" data-plan-file="@plan.File">
+                <img src="@plan.File" alt="@plan.Name loading plan preview" loading="lazy" />
+                <span>@plan.Name</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer small text-muted">PDF/image-only plans are included as images in Word and will not have editable text. Editable DOCX originals download as editable documents.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="loadingPlanPreviewModal" tabindex="-1" aria-labelledby="loadingPlanPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loadingPlanPreviewModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="loadingPlanPreviewImage" class="loading-plan-large-preview" alt="Selected loading plan" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="temperatureSearchModal" tabindex="-1" aria-labelledby="temperatureSearchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="temperatureSearchModalLabel">Select recorded heat times</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="temperatureSearchSummary" class="alert d-none" role="alert"></div>
+        <div id="temperatureSearchError" class="alert alert-danger d-none" role="alert"></div>
+        <div>
+          <table class="table table-bordered align-middle mb-0">
+            <thead><tr><th>Controller</th><th>Channel</th><th>Target °C</th><th>In Time</th><th>Out Time</th><th>Hold Time</th><th>Status</th><th style="width:110px">Action</th></tr></thead>
+            <tbody id="temperatureSearchResults">
+            <tr>
+              <td colspan="8" class="text-center text-muted">
+                No results
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(() => {
+  let activeRow = null;
+  let temperatureProcessRow = null;
+  const previewModal = document.getElementById('loadingPlanPreviewModal');
+  const previewImage = document.getElementById('loadingPlanPreviewImage');
+  const previewTitle = document.getElementById('loadingPlanPreviewModalLabel');
+  const temperatureSearchModal = new bootstrap.Modal(document.getElementById('temperatureSearchModal'));
+  const temperatureSearchSummary = document.getElementById('temperatureSearchSummary');
+  const temperatureSearchError = document.getElementById('temperatureSearchError');
+  const temperatureSearchResults = document.getElementById('temperatureSearchResults');
+
+  document.querySelectorAll('.loading-plan-button').forEach(button => {
+    button.addEventListener('click', () => {
+      activeRow = Number(button.dataset.row);
+    });
+  });
+
+  document.querySelectorAll('.loading-plan-card').forEach(card => {
+    card.addEventListener('click', () => {
+      if (activeRow === null) return;
+
+      const row = document.querySelectorAll('.process-table tbody tr')[activeRow];
+      const hidden = row.querySelector('.loading-plan-value');
+      const button = row.querySelector('.loading-plan-button');
+      const preview = row.querySelector('.selected-plan-preview');
+      const previewThumbnail = preview.querySelector('img');
+      const name = row.querySelector('.selected-plan-name');
+
+      hidden.value = card.dataset.planId;
+      previewThumbnail.src = card.dataset.planFile;
+      previewThumbnail.alt = `${card.dataset.planName} loading plan`;
+      preview.setAttribute('aria-label', `Preview ${card.dataset.planName} loading plan`);
+      preview.classList.remove('d-none');
+      button.classList.remove('btn-outline-primary');
+      button.classList.add('btn-primary');
+      button.title = card.dataset.planName;
+      name.textContent = card.dataset.planName;
+
+      bootstrap.Modal.getInstance(document.getElementById('loadingPlanModal')).hide();
+      activeRow = null;
+    });
+  });
+
+  document.querySelectorAll('.selected-plan-preview').forEach(preview => {
+    preview.addEventListener('click', () => {
+      const row = preview.closest('tr');
+      const thumbnail = preview.querySelector('img');
+      previewImage.src = thumbnail.src;
+      previewImage.alt = thumbnail.alt;
+      previewTitle.textContent = row.querySelector('.selected-plan-name').textContent;
+    });
+  });
+
+  document.getElementById('heatCardForm').addEventListener('reset', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.loading-plan-button').forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-primary');
+      });
+      document.querySelectorAll('.loading-plan-value').forEach(x => x.value = '');
+      document.querySelectorAll('.selected-plan-name').forEach(x => x.textContent = '');
+      document.querySelectorAll('.selected-plan-preview').forEach(preview => {
+        preview.classList.add('d-none');
+        preview.querySelector('img').removeAttribute('src');
+      });
+    }, 0);
+  });
+
+  document.querySelectorAll('.temperature-search-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const row = button.closest('tr');
+      const furnace = row.querySelector('[name*="FurnaceNo"]').value;
+      const date = row.querySelector('input[name*="Date"]').value;
+      const target = row.querySelector('.process-temperature').value;
+
+      temperatureProcessRow = row;
+
+      temperatureSearchError.classList.add('d-none');
+      temperatureSearchSummary.classList.remove('d-none');
+      temperatureSearchSummary.textContent = 'Searching...';
+      temperatureSearchResults.innerHTML = '';
+      const searchingRow = document.createElement('tr');
+      searchingRow.innerHTML = '<td colspan="8" class="text-center text-muted">Searching...</td>';
+      temperatureSearchResults.appendChild(searchingRow);
+      temperatureSearchModal.show();
+
+      const params = new URLSearchParams({ furnaceNo: furnace, date, targetTemperature: target });
+
+      if (!furnace || !date || !target || !Number.isFinite(Number(target))) {
+        temperatureSearchSummary.classList.add('d-none');
+        temperatureSearchError.classList.remove('d-none');
+        temperatureSearchError.textContent = 'Enter a furnace, date, and numeric target temperature in this row.';
+        temperatureSearchResults.innerHTML = '';
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="8" class="text-center text-muted">Invalid input</td>';
+        temperatureSearchResults.appendChild(row);
+        return;
+      }
+
+      fetch(`/temperature-history/search?${params}`)
+        .then(async response => {
+          if (!response.ok) {
+            const responseBody = await response.text();
+            const message = response.status >= 500
+              ? `Search request failed (HTTP ${response.status}).`
+              : responseBody || `Search request failed (HTTP ${response.status}).`;
+            throw new Error(message);
+          }
+          return response.json();
+        })
+        .then(data => {
+          temperatureSearchResults.innerHTML = '';
+          if (data.results.length === 0) {
+            temperatureSearchSummary.textContent = 'No results found.';
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="8" class="text-center text-muted">No results</td>';
+            temperatureSearchResults.appendChild(row);
+            return;
+          }
+
+          temperatureSearchSummary.textContent = `${data.readingCount} reading(s) found for furnace ${data.furnaceNo} on ${data.date} with target temperature ${data.targetTemperature}°C.`;
+
+          data.results.forEach(item => {
+            const row = document.createElement('tr');
+
+            const cellController = document.createElement('td');
+            cellController.textContent = item.controllerId;
+            row.appendChild(cellController);
+
+            const cellChannel = document.createElement('td');
+            cellChannel.textContent = item.channel;
+            row.appendChild(cellChannel);
+
+            const cellTargetTemp = document.createElement('td');
+            cellTargetTemp.textContent = item.targetTemperature;
+            row.appendChild(cellTargetTemp);
+
+            const cellInTime = document.createElement('td');
+            cellInTime.textContent = formatTime(item.inTime);
+            row.appendChild(cellInTime);
+
+            const cellOutTime = document.createElement('td');
+            cellOutTime.textContent = formatTime(item.outTime);
+            row.appendChild(cellOutTime);
+
+            const cellHoldTime = document.createElement('td');
+            cellHoldTime.textContent = formatHoldTime(item.holdTime);
+            row.appendChild(cellHoldTime);
+
+            const cellStatus = document.createElement('td');
+            cellStatus.textContent = item.status;
+            row.appendChild(cellStatus);
+
+            const cellAction = document.createElement('td');
+            const buttonUseTimes = document.createElement('button');
+            buttonUseTimes.type = 'button';
+            buttonUseTimes.className = 'btn btn-success btn-sm';
+            buttonUseTimes.textContent = 'Use times';
+            buttonUseTimes.disabled = !item.inTime;
+            buttonUseTimes.addEventListener('click', () => {
+              if (temperatureProcessRow) {
+                temperatureProcessRow.querySelector('input[name*="InTime"]').value = formatTime(item.inTime);
+                temperatureProcessRow.querySelector('input[name*="OutTime"]').value = formatTime(item.outTime);
+                temperatureProcessRow.querySelector('input[name*="HoldTime"]').value = formatHoldTime(item.holdTime);
+              }
+              temperatureSearchModal.hide();
+            });
+            cellAction.appendChild(buttonUseTimes);
+            row.appendChild(cellAction);
+
+            temperatureSearchResults.appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Temperature history search failed:', error);
+          temperatureSearchSummary.textContent = 'Search failed.';
+          temperatureSearchError.classList.remove('d-none');
+          temperatureSearchError.textContent = error instanceof Error && error.message.trim()
+            ? error.message
+            : 'The search failed. Check the application logs and try again.';
+          temperatureSearchResults.innerHTML = '';
+          const row = document.createElement('tr');
+          row.innerHTML = '<td colspan="8" class="text-center text-muted">Error fetching results</td>';
+          temperatureSearchResults.appendChild(row);
+        });
+    });
+  });
+
+  function formatTime(value) {
+    if (!value) return '';
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value));
+  }
+
+  function formatHoldTime(value) {
+    if (!value) return '';
+    const [hourPart, minutePart = '00'] = value.split(':');
+    const hours = hourPart.split('.').pop();
+    return `${hours.padStart(2, '0')}:${minutePart.padStart(2, '0')}`;
+  }
+})();
+</script>
+</body>
+</html>

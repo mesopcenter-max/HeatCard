@@ -1,0 +1,80 @@
+[
+  {
+    "id": "ge-loading-plan-1-fig",
+    "name": "1 Jig",
+    "file": "/loading-plans/ge-loading-plan-1-fig.png",
+    "source": "Jigs/GE Loading Plan-1-fig.pdf"
+  },
+  {
+    "id": "ge-loading-plan-2-jig",
+    "name": "2 Jigs",
+    "file": "/loading-plans/ge-loading-plan-2-jig.png",
+    "source": "Jigs/GE Loading Plan-2-jig.pdf"
+  },
+  {
+    "id": "ge-loading-plan-3-jig",
+    "name": "3 Jigs",
+    "file": "/loading-plans/ge-loading-plan-3-jig.png",
+    "source": "Jigs/GE Loading Plan-3-jig.pdf"
+  },
+  {
+    "id": "ge-loading-plan-9309-jig",
+    "name": "9309 Jig",
+    "file": "/loading-plans/ge-loading-plan-9309-jig.png",
+    "source": "Jigs/GE Loading Plan-9309-jig.pdf"
+  },
+  {
+    "id": "ge-loading-plan-12438",
+    "name": "12438 Jig",
+    "file": "/loading-plans/ge-loading-plan-12438.png",
+    "source": "Jigs/GE Loading Plan-12438.pdf"
+  },
+  {
+    "id": "loading-plan-for-ge-4-in-1",
+    "name": "4 in 1",
+    "file": "/loading-plans/loading-plan-for-ge-4-in-1.png",
+    "source": "Jigs/Loading plan for GE-4-in-1.pdf"
+  },
+  {
+    "id": "loading-plan-for-ge-4-in-1-2jigs",
+    "name": "2 Jigs",
+    "file": "/loading-plans/loading-plan-for-ge-4-in-1-2jigs.png",
+    "source": "Jigs/Loading plan for GE-4-in-1 -2jigs.pdf"
+  },
+  {
+    "id": "loading-plan-for-ge-4-in-1-2-jigs",
+    "name": "2 Jigs - 4 in 1",
+    "file": "/loading-plans/loading-plan-for-ge-4-in-1-2-jigs.png",
+    "source": "Jigs/Loading plan for GE-4-in-1 -2 Jigs.pdf"
+  },
+  {
+    "id": "single-jis-single-stack",
+    "name": "1 Jig - Single Stack",
+    "file": "/loading-plans/single-jis-single-stack.png",
+    "source": "Jigs/GE LOADING FINAL/LOADING PLAN/SINGLE JIS- SINGLE STACK.pdf"
+  },
+  {
+    "id": "single-jis-four-stack",
+    "name": "1 Jig - Four Stack",
+    "file": "/loading-plans/single-jis-four-stack.png",
+    "source": "Jigs/GE LOADING FINAL/LOADING PLAN/SINGLE JIS- FOUR STACK.pdf"
+  },
+  {
+    "id": "ge-loading-plan-1-jig-2-rings",
+    "name": "1 Jig - 2 Rings",
+    "file": "/loading-plans/ge-loading-plan-1-jig-2-rings.png",
+    "source": "Jigs/GE LOADING FINAL/GE LOADING FINAL/GE Loading Plan-1-jig (2 RINGS).pdf"
+  },
+  {
+    "id": "loading-plan-for-ge-4-in-1-1-batches",
+    "name": "4 in 1 - 1 Batch",
+    "file": "/loading-plans/loading-plan-for-ge-4-in-1-1-batches.png",
+    "source": "Jigs/GE LOADING FINAL/GE LOADING FINAL/Loading plan for GE-4-in-1 ( 1 BATCHES).pdf"
+  },
+  {
+    "id": "loading-plan-for-ge-4-in-1-2-batches-copy",
+    "name": "4 in 1 - 2 Batches",
+    "file": "/loading-plans/loading-plan-for-ge-4-in-1-2-batches-copy.png",
+    "source": "Jigs/GE LOADING FINAL/GE LOADING FINAL/Loading plan for GE-4-in-1 ( 2 BATCHES) - Copy.pdf"
+  }
+]
