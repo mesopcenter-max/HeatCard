@@ -9,9 +9,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>@ViewData["Title"]</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="~/css/site.css" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+<header class="site-header" role="banner">
+  <div class="site-header-inner container-fluid px-4">
+    <div class="hal-brand" aria-label="Hindustan Aeronautics Limited">
+      <span class="hal-logo-frame">
+        <img class="hal-logo" src="~/images/hal-logo.png" alt="HAL logo" />
+      </span>
+      <span class="hal-brand-copy">
+        <strong>Hindustan Aeronautics Limited</strong>
+        <small>Heat Treatment Operations</small>
+      </span>
+    </div>
+    <div class="header-right">
+      <div class="header-context">
+        <span class="header-context-label">Production quality record</span>
+        <span class="header-context-value">Heat Card Generator</span>
+      </div>
+      <nav class="header-nav" aria-label="Heat card sections">
+        <a href="#heat-card-details"><i class="bi bi-clipboard2-check" aria-hidden="true"></i> Details</a>
+        <a href="#process-section"><i class="bi bi-activity" aria-hidden="true"></i> Process</a>
+        <a href="#submission-actions"><i class="bi bi-send-check" aria-hidden="true"></i> Actions</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
 <div class="container-fluid px-4 py-4">
   @if (TempData["ImportMessage"] != null)
   {
@@ -23,14 +49,18 @@
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div><h1>Heat Treatment Card</h1><p class="text-muted mb-0">Generate the Excel heat card report, or download a selected loading-plan template as Word.</p></div>
-    <div class="d-flex gap-2 align-items-center"><span class="badge text-bg-primary">Excel Generator</span></div>
+    <a class="excel-generator-link" href="#submission-actions" aria-label="Go to Excel Generator actions">
+      <span class="excel-generator-icon" aria-hidden="true">X</span>
+      <span><strong>Excel Generator</strong><small>Generate report</small></span>
+      <span class="excel-generator-arrow" aria-hidden="true">&#8595;</span>
+    </a>
   </div>
 
   <form asp-action="Generate" method="post" id="heatCardForm">
     @Html.AntiForgeryToken()
 
-    <div class="card mb-4">
-      <div class="card-header">1. Heat Card Details</div>
+    <div class="card mb-4" id="heat-card-details">
+      <div class="card-header"><i class="bi bi-clipboard2-data section-icon" aria-hidden="true"></i> 1. Heat Card Details</div>
       <div class="card-body"><div class="row g-3">
         @foreach (var f in new[]{("Project","Project"),("FdNo","FD No"),("PslNo","PSL No"),("PartName","Part Name"),("CustPartName","Customer Part Name"),("Specification","Specification"),("BatchNo","Batch No"),("WorkOrderNo","Work Order No"),("HeatNo","Heat No"),("SerialNo","Serial No"),("Quantity","Quantity")}) {
           <div class="col-md-4"><label class="form-label">@f.Item2</label><input class="form-control" name="@f.Item1" /></div>
@@ -38,8 +68,8 @@
       </div></div>
     </div>
 
-    <div class="card mb-4">
-      <div class="card-header">2. Pre Heat Treatment Checklist</div>
+    <div class="card mb-4" id="preheat-checklist">
+      <div class="card-header"><i class="bi bi-list-check section-icon" aria-hidden="true"></i> 2. Pre Heat Treatment Checklist</div>
       <div class="card-body p-0"><div class="table-responsive"><table class="table table-bordered mb-0 align-middle">
         <thead><tr><th style="width:55px">Sl.</th><th>Checklist item</th><th style="width:170px">Result</th></tr></thead>
         <tbody>
@@ -64,10 +94,10 @@
       </table></div></div>
     </div>
 
-    <div class="card mb-4">
+    <div class="card mb-4" id="process-section">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span>3. Heat Treatment Process - Actual</span>
-        <span class="small text-muted">Choose a loading plan for any operation row. Download one template at a time.</span>
+        <span><i class="bi bi-thermometer-half section-icon" aria-hidden="true"></i> 3. Heat Treatment Process - Actual</span>
+        <span class="small text-muted"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Choose a loading plan for any operation row. Download one template at a time.</span>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -81,7 +111,7 @@
                 <td><input class="form-control" name="Processes[@i].OprNo" /></td>
                 <td><input type="date" class="form-control" name="Processes[@i].Date" /></td>
                 <td>
-                  <select class="form-select" name="Processes[@i].Process">
+                  <select class="form-select process-drilldown" name="Processes[@i].Process">
                     <option value="">Select process</option>
                     <option value="Hardenining">Hardenining</option>
                     <option value="Tempering">Tempering</option>
@@ -89,7 +119,7 @@
                   </select>
                 </td>
                 <td>
-                  <select class="form-select" name="Processes[@i].FurnaceNo">
+                  <select class="form-select process-drilldown" name="Processes[@i].FurnaceNo">
                     <option value="">Select furnace</option>
                     @foreach (var furnaceNo in Model.FurnaceNumbers)
                     {
@@ -102,9 +132,9 @@
                   <div class="input-group">
                     <input class="form-control process-temperature" name="Processes[@i].Temp" />
                     <button type="button" class="btn btn-outline-secondary temperature-search-button" title="Search temperature history" aria-label="Search temperature history for this process row">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <i class="bi bi-search" aria-hidden="true"></i><!--
                         <path fill-rule="evenodd" d="M11.742 10.344a6.5 6.5 0 1 1 1.398-1.398l3.855 3.854a1 1 0 0 1-1.415 1.415l-3.855-3.854zm-7.72-7.72a5.5 5.5 0 1 0 7.778 7.778 5.5 5.5 0 0 0-7.778-7.778z"/>
-                      </svg>
+                      -->
                     </button>
                   </div>
                 </td>
@@ -112,7 +142,7 @@
                 <td><input type="time" class="form-control" name="Processes[@i].OutTime" /></td>
                 <td><input class="form-control" name="Processes[@i].HoldTime" /></td>
                 <td>
-                  <select class="form-select" name="Processes[@i].CoolingMethod">
+                  <select class="form-select process-drilldown" name="Processes[@i].CoolingMethod">
                     <option value="">Select cooling</option>
                     <option value="A/C">A/C</option>
                     <option value="Other">Other</option>
@@ -122,9 +152,7 @@
                 <td class="loading-plan-cell">
                   <input type="hidden" class="loading-plan-value" name="Processes[@i].LoadingPlanId" value="" />
                   <button type="button" class="btn btn-outline-primary loading-plan-button" data-row="@i" title="Select loading plan" data-bs-toggle="modal" data-bs-target="#loadingPlanModal">
-                    <span class="image-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                    </span>
+                    <i class="bi bi-images" aria-hidden="true"></i>
                   </button>
                   <button type="button" class="selected-plan-preview d-none" data-bs-toggle="modal" data-bs-target="#loadingPlanPreviewModal" aria-label="Preview selected loading plan">
                     <img alt="Selected loading plan preview" />
@@ -136,12 +164,12 @@
             </tbody>
           </table>
         </div>
-        <div class="p-3 small text-muted">The selected loading plan is saved with its operation row. Click its thumbnail to view a larger preview.</div>
+        <div class="p-3 small text-muted"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>The selected loading plan is saved with its operation row. Click its thumbnail to view a larger preview.</div>
       </div>
     </div>
 
-    <div class="card mb-4">
-      <div class="card-header">4. Water/Oil Temperature & Signatures</div>
+    <div class="card mb-4" id="water-oil-section">
+      <div class="card-header"><i class="bi bi-droplet-half section-icon" aria-hidden="true"></i> 4. Water/Oil Temperature & Signatures</div>
       <div class="card-body"><div class="row g-3">
         <div class="col-md-3"><label class="form-label">Water/Oil Temp - Before</label><input class="form-control" name="WaterOilBefore" /></div>
         <div class="col-md-3"><label class="form-label">Water/Oil Temp - After</label><input class="form-control" name="WaterOilAfter" /></div>
@@ -150,41 +178,25 @@
       </div></div>
     </div>
 
-    <div class="d-flex gap-2 mb-5">
-      <button class="btn btn-primary btn-lg" type="submit">Generate Excel Report</button>
-      <button class="btn btn-outline-primary btn-lg" type="submit" formaction="@Url.Action("DownloadLoadingPlans")">Download Selected Plan as Word</button>
-      <button class="btn btn-outline-secondary btn-lg" type="reset">Clear Form</button>
+    <div class="d-flex gap-2 mb-5" id="submission-actions">
+      <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>Generate Excel Report</button>
+      <button class="btn btn-outline-primary btn-lg" type="submit" formaction="@Url.Action("DownloadLoadingPlans")"><i class="bi bi-file-earmark-word me-2" aria-hidden="true"></i>Download Selected Plan as Word</button>
+      <button class="btn btn-outline-secondary btn-lg" type="reset"><i class="bi bi-arrow-counterclockwise me-2" aria-hidden="true"></i>Clear Form</button>
     </div>
   </form>
 
-  <details class="card mb-4">
-    <summary class="card-header">
-      Import Eurotherm historical readings (CSV)
-    </summary>
-    <div class="card-body">
-      <div class="mb-3">
-        <div class="form-text text-muted">
-          Expected columns: <code>Timestamp,FurnaceNo,Channel,Temperature,ControllerId</code>
-        </div>
-      </div>
-      <form action="/temperature-history/import-csv" method="post" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
-        <div class="mb-3">
-          <label class="form-label" for="csvFileInput">Import CSV File</label>
-          <input class="form-control" id="csvFileInput" type="file" name="file" accept=".csv" required />
-        </div>
-        <button class="btn btn-primary" type="submit">Import CSV</button>
-      </form>
-      <div class="mt-3 small text-muted">
-        <div class="fw-bold">Multi-channel demo search:</div>
-        searching DEMO-GH-3 on 2026-10-28 loads eight synthetic channel choices in memory; no CSV import is needed. The downloadable CSV is optional and is only for testing CSV import in an isolated test database.
-        <div>
-          <a href="/demo-temperature-readings.csv" class="btn btn-link p-0" download>Download multi-channel demo CSV</a> (DEMO-GH-3 / 2026-10-28 readings for an 850°C search)
-        </div>
-      </div>
-    </div>
-  </details>
 </div>
+
+<footer class="site-footer">
+  <div class="container-fluid px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+    <div>
+      <strong><i class="bi bi-shield-check me-1" aria-hidden="true"></i>HAL Heat Treatment Card</strong>
+      <span class="footer-divider">|</span>
+      <span>Controlled production documentation</span>
+    </div>
+    <div class="footer-meta"><span><i class="bi bi-lock me-1" aria-hidden="true"></i>Internal use</span><button type="button" class="back-to-top" aria-label="Back to top"><i class="bi bi-arrow-up me-1" aria-hidden="true"></i>Back to top</button></div>
+  </div>
+</footer>
 
 <!-- Loading Plan Picker -->
 <div class="modal fade" id="loadingPlanModal" tabindex="-1" aria-labelledby="loadingPlanModalLabel" aria-hidden="true">
@@ -192,7 +204,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h5 class="modal-title" id="loadingPlanModalLabel">Select Loading Plan</h5>
+          <h5 class="modal-title" id="loadingPlanModalLabel"><i class="bi bi-images me-2" aria-hidden="true"></i>Select Loading Plan</h5>
           <div class="small text-muted">Choose the jig/ring/stack combination for this process row.</div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -219,7 +231,7 @@
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="loadingPlanPreviewModalLabel"></h5>
+        <h5 class="modal-title" id="loadingPlanPreviewModalLabel"><i class="bi bi-zoom-in me-2" aria-hidden="true"></i><span id="loadingPlanPreviewTitle"></span></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-center">
@@ -233,7 +245,7 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="temperatureSearchModalLabel">Select recorded heat times</h5>
+        <h5 class="modal-title" id="temperatureSearchModalLabel"><i class="bi bi-search me-2" aria-hidden="true"></i>Select recorded heat times</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -263,7 +275,7 @@
   let temperatureProcessRow = null;
   const previewModal = document.getElementById('loadingPlanPreviewModal');
   const previewImage = document.getElementById('loadingPlanPreviewImage');
-  const previewTitle = document.getElementById('loadingPlanPreviewModalLabel');
+  const previewTitle = document.getElementById('loadingPlanPreviewTitle');
   const temperatureSearchModal = new bootstrap.Modal(document.getElementById('temperatureSearchModal'));
   const temperatureSearchSummary = document.getElementById('temperatureSearchSummary');
   const temperatureSearchError = document.getElementById('temperatureSearchError');
@@ -415,7 +427,7 @@
             const buttonUseTimes = document.createElement('button');
             buttonUseTimes.type = 'button';
             buttonUseTimes.className = 'btn btn-success btn-sm';
-            buttonUseTimes.textContent = 'Use times';
+            buttonUseTimes.innerHTML = '<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Use times';
             buttonUseTimes.disabled = !item.inTime;
             buttonUseTimes.addEventListener('click', () => {
               if (temperatureProcessRow) {
@@ -457,6 +469,19 @@
     const hours = hourPart.split('.').pop();
     return `${hours.padStart(2, '0')}:${minutePart.padStart(2, '0')}`;
   }
+
+  document.querySelectorAll('.header-nav a').forEach(link => {
+    link.addEventListener('click', event => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  document.querySelector('.back-to-top').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 })();
 </script>
 </body>
